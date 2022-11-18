@@ -6,7 +6,7 @@
 
 LoadData <-   function(params_list,
                        variables) {
-
+    
     # Assigning parameters -----------------------------------
     ncores <- params_list$ncores
     path_predictor <- params_list$path_predictor
@@ -24,7 +24,7 @@ LoadData <-   function(params_list,
     setwd(path_predictor)
     cluster <-
         makeCluster(ncores, type = "FORK")
-    if (length(grep(".txt", predictor_files)) > 0)  {
+    if (length(grep(".txt", predictor.files)) > 0)  {
         pred. <-
             parSapply(cluster, seq_along(predictor.files.number), LoadStationCsv, station_files = predictor.files.number, files = predictor.files, params_list = params_list)
     } else{
@@ -45,7 +45,7 @@ LoadData <-   function(params_list,
     setwd(path_predicted)
     cluster <-
         makeCluster(ncores, type = "FORK")
-    if (length(grep(".txt", target_files)) > 0) {
+    if (length(grep(".txt", target.files)) > 0) {
         target. <-
             parSapply(cluster, seq_along(target.files.number), LoadStationCsv, station_files = target.files.number, files = target.files, params_list = params_list)
         target. <- target.[, 1]

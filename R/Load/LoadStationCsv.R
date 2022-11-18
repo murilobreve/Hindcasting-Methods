@@ -1,10 +1,10 @@
 LoadStationCsv <-
     function(n, station_files, files, params_list) {
-
+ 
         # Assigning parameters -----------------------------------
         start_of_date <-  params_list$start_of_date
         end_of_date <- params_list$end_of_date
-        forecasting_t0 <- params_list$prediction_t0
+        pred_t0 <- params_list$prediction_t0
         start_H <-  params_list$start_H
         end_H <-  params_list$end_H
         netCDF_resolution <- params_list$netCDF_resolution
@@ -39,7 +39,9 @@ LoadStationCsv <-
         datast$t <- as.numeric(datast$stamp)
 
         # Organizing and cleaning the inside variables -----------------------------------
-        if (variables %in% header) {
+        v.h <- variables %in% header
+        
+        if (all(v.h) == TRUE) {
             for (i in seq_len(length(variables))) {
                 datast[[variables[i]]] <-
                     ds[, variables[i]]
@@ -76,16 +78,16 @@ LoadStationCsv <-
 
             # Defining the prediction and the training period-----------------------------------
             datast$t0 <-
-                (as.numeric(as.POSIXct(prediction_t0, tz = "UTC")) - as.numeric(datast$epoch)) / netCDF_resolution
+                (as.numeric(as.POSIXct(pred_t0, tz = "UTC")) - as.numeric(datast$epoch)) / netCDF_resolution
             datast$t0
             datast$N <- length(datast$stamp)
             datast$n0 <-
-                match(forecasting.t0, datast$stamp)
+                match(pred_t0, datast$stamp)
             datast$n0
             datast$t <- as.numeric(as.POSIXct(datast$stamp))
 
             return(datast)
         }
         return("no_variables")
-        message("[INFO] The chosen variables are not in the dataset")
+        message("[ERROR] At least one of the chosen variables isn't in the dataset")
     }
