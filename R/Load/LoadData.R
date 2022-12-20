@@ -29,7 +29,7 @@ LoadData <-   function(params_list,
             parSapply(cluster, seq_along(predictor.files.number), LoadStationCsv, station_files = predictor.files.number, files = predictor.files, params_list = params_list)
     } else{
         pred. <-
-            parSapply(cluster, seq_along(predictor.files), LoadStation)
+            parSapply(cluster, seq_along(predictor.files.number), LoadStation, station_files = predictor.files.number, files = predictor.files, params_list = params_list)
     }
     stopCluster(cluster)
 

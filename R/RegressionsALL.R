@@ -28,129 +28,127 @@ Regressions <- function(params_list,
                         variables,
                         variables_predict,
                         avail_threshold = 0.85) {
-    message("[INFO] Running")
-    message(variables,
-            " Using to produce the model, and ",
-            variables_predict,
-            "to predict")
-    start.time <- Sys.time()
-    
-    time_0 <- params_list$prediction_t0
-    
-    # Load data -----------------------------------
-    loaded_stations <- LoadData(params_list, variables)
-    
-    # Assigning data ------------------------------
-    pred <- loaded_stations$pred
-    time_series <- pred[, 1]$stamp
-    predictor_name <- loaded_stations$predictor_name
-    target <- loaded_stations$target
-    predicted_name <- loaded_stations$predicted_name
-    
-    # Organizing data ------------------------------
-    data <-
-        OrganizeIntoDataFrame(params_list, loaded_stations, avail_threshold)
-    
-    load.time <- Sys.time()
-    message(
-        "[INFO] Time consumed only by loading the stations: ",
-        round(load.time - start.time, 3),
-        " secs"
-    )
+  message("[INFO] Running")
+  message(variables,
+          " Using to produce the model, and ",
+          variables_predict,
+          "to predict")
+  start.time <- Sys.time()
+  
+  time_0 <- params_list$prediction_t0
+  
+  
+  # Load data -----------------------------------
+  loaded_stations <- LoadData(params_list, variables)
+  
+  # Assigning data ------------------------------
+  pred <- loaded_stations$pred
+  time_series <- pred[, 1]$stamp
+  predictor_name <- loaded_stations$predictor_name
+  target <- loaded_stations$target
+  predicted_name <- loaded_stations$predicted_name
+  
+  # Organizing data ------------------------------
+  data <-
+    OrganizeIntoDataFrame(params_list, loaded_stations, avail_threshold)
+  
+  variables_station <- list()
+  measures <- list()
+  for (k in seq_along(data[1, ])) {
+    variable_predicted <- colnames(data)[k]
     
     # Bind the predictors and the predicted to train the model
-    data_pred_train <- cbind(data, target[[variables_predict]])
+    data_pred_train <- cbind(data[, -k], data[, k])
     colnames(data_pred_train)[ncol(data_pred_train)] <- "target"
     
     # Setting the right period for prediction/training
     training_time <- time_series < time_0
     prediction_time <- !training_time
-    data_period_training <- data_pred_train[training_time,]
+    data_period_training <- data_pred_train[training_time, ]
     
     data_period_prediction <-
-        data_pred_train[prediction_time, -ncol(data_pred_train)]
+      data_pred_train[prediction_time,-ncol(data_pred_train)]
     n_col <- ncol(data_period_prediction)
     
     observ_data_prediction <-
-        data_pred_train[prediction_time, ncol(data_pred_train)]
+      data_pred_train[prediction_time, ncol(data_pred_train)]
     
     model.start.time <- Sys.time()
     
     # Apply the methods
     if (method == "PLSR") {
-        model <-
-            pls::plsr(
-                target ~ .,
-                data = as.data.frame(data_period_training),
-                validation = "CV",
-                ncomp = n_col,
-                center = TRUE,
-                scale = TRUE
-            )
+      model <-
+        pls::plsr(
+          target ~ .,
+          data = as.data.frame(data_period_training),
+          validation = NULL,
+          ncomp = 6,
+          center = TRUE,
+          scale = TRUE
+        )
     }
     if (method == "PCR") {
-        model <-
-            pls::pcr(
-                target ~ .,
-                data = as.data.frame(data_period_training),
-                validation = "CV",
-                ncomp = n_col,
-                center = TRUE,
-                scale = TRUE
-            )
+      model <-
+        pls::pcr(
+          target ~ .,
+          data = as.data.frame(data_period_training),
+          validation = "CV",
+          ncomp = n_col,
+          center = TRUE,
+          scale = TRUE
+        )
     }
     
-    model.end.time <- Sys.time()
-    message(
-        "[INFO] Time consumed only by the model: ",
-        round(model.end.time - model.start.time, 3),
-        " secs"
-    )
-    
-    pred.start.time <- Sys.time()
-    
     # Predict the data ------------------------------
-    prevAle <- predict(model, data_period_prediction, ncomp = n_col)
+    prevAle <- predict(model, data_period_prediction, ncomp = 6)
     
     pred.end.time <- Sys.time()
-    message(
-        "[INFO] Time consumed by the prediction: ",
-        round(pred.end.time - pred.start.time, 3),
-        " secs"
-    )
     
     # Measures of prediction ------------------------------
-    measures <-
-        array(NA, dim = 4)
-    
     E <- observ_data_prediction - prevAle
     BIAS <-
-        ((1 / length(E)) * sum(E, na.rm = TRUE))
+      ((1 / length(E)) * sum(E, na.rm = TRUE))
     RMSE <- sqrt(mean((E) ^ 2,  na.rm = TRUE))
     SDE <- sqrt((RMSE ** 2) - (BIAS ** 2))
     porcentage_na <-
-        round((sum(!complete.cases(
-            as.vector(prevAle)
-        )) / sum(complete.cases(
-            as.vector(prevAle)
-        ))) * 100, 3)
+      round((sum(!complete.cases(
+        as.vector(prevAle)
+      )) / sum(complete.cases(
+        as.vector(prevAle)
+      ))) * 100, 3)
     
-    measures <- round(c(BIAS, RMSE, SDE, porcentage_na), 3)
-    names(measures) <- c("BIAS", "RMSE", "SDE", "NA%")
+    measures[[k]] <-
+      c(BIAS, RMSE, SDE, porcentage_na, colnames(data)[k])
+    names(measures[[k]]) <- c("BIAS", "RMSE", "SDE", "NA%", "Name")
     
     end.time <- Sys.time()
     
-    # Output messages ------------------------------
-    print(summary(model))
-    message("[INFO] All time consumed: ",
-            round(end.time - start.time, 3),
-            " secs")
+    # Output messages ----------------------------------------
     print(measures)
+  }
+  
+    result <- t(do.call(cbind, measures))
+  result_
+  result[, 2]
+  
+  result_variable <- list()
+  for (j in seq_along(variables)) {
+    result_variable[[j]] <- result[grep(variables[j], result[, 5]), ]
     
-    target$stamp[prediction_time]
+  }
+  
+  names(result_variable) <- variables
+  
+  target$stamp[prediction_time]
+  
+  if (plot) {
     
-    if(plot){
-        
-    }
-    
+  }
+  
 }
+
+norfolk_result_all <-
+  cbind(do.call(rbind, result_variable), do.call(rbind, result_m))
+
+norfolk_result_all[, c(1, 2, 3, 6, 7, 8)] <-
+  round(as.numeric(norfolk_result_all[, c(1, 2, 3, 6, 7, 8)]), 3)

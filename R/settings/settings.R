@@ -1,8 +1,15 @@
 setwd("~/")
-setwd("AnEnMDataR/data/predictor")
+setwd("Hindcasting-Methods/data/predictor")
 path_predictor <- getwd()
 setwd("~/")
-setwd("AnEnMDataR/data/predicted")
+setwd("Hindcasting-Methods/data/predicted")
+path_predicted <- getwd()
+
+setwd("~/")
+setwd("Hindcasting-Methods/data/NORFOLK_DATASET")
+path_predictor <- getwd()
+setwd("~/")
+setwd("Hindcasting-Methods/data/predicted")
 path_predicted <- getwd()
 
 params_list <- list(

@@ -35,7 +35,7 @@ AnEnMethods <-
 
         # Load data -----------------------------------
         loaded_stations <- LoadData(params_list, variables)
-
+        
         # Organize data -----------------------------------
         data_pca <- OrganizeIntoDataFrame(params_list, loaded_stations, avail_threshold)
 
@@ -54,7 +54,7 @@ AnEnMethods <-
 
         # Organizing in vectors  -----------------------------------
         Y_result <-
-            OrganizeSequenceVectors(PCs_and_pca, target, loaded_stations)
+            OrganizeSequenceVectors(PCs_and_pca, loaded_stations)
 
         Y <- Y_result$Y.analogues
         Y_pred <- Y_result$Y.pred
